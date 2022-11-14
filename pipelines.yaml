@@ -1,0 +1,52 @@
+entry-pipeline:
+  delay: "100"
+  source:
+    otel_trace_source:
+      ssl: false
+  sink:
+    - pipeline:
+        name: "raw-pipeline"
+    - pipeline:
+        name: "service-map-pipeline"
+raw-pipeline:
+  source:
+    pipeline:
+      name: "entry-pipeline"
+  processor:
+    - otel_trace_raw:
+  sink:
+    - opensearch:
+        hosts: [ "https://opensearch:9200" ] #Set your opensearch endpoint
+        insecure: true
+        username: admin
+        password: admin
+        index_type: trace-analytics-raw
+service-map-pipeline:
+  delay: "100"
+  source:
+    pipeline:
+      name: "entry-pipeline"
+  processor:
+    - service_map_stateful:
+  sink:
+    - opensearch:
+        hosts: [ "https://opensearch:9200" ] #Set your opensearch endpoint
+        insecure: true
+        username: admin
+        password: admin
+        index_type: trace-analytics-service-map
+log-pipeline:
+  source:
+    http:
+      ssl: false
+  processor:
+    - grok:
+        match:
+          log: [ "%{COMMONAPACHELOG}" ]
+  sink:
+    - opensearch:
+        hosts: [ "https://opensearch:9200" ] #Set your opensearch endpoint
+        insecure: true
+        username: admin
+        password: admin
+        index: apache_logs

@@ -1,0 +1,24 @@
+receivers:
+  otlp:
+    protocols:
+      grpc: 
+        endpoint: 0.0.0.0:55680
+      http: 
+        endpoint: 0.0.0.0:4318
+
+processors:
+  batch:
+    timeout: 10s
+
+exporters:
+  otlp/data-prepper:
+    endpoint: data-prepper:21890 #Set your endpoint for data-prepper
+    tls:
+      insecure: true
+
+service:
+  pipelines:
+    traces:
+      receivers: [otlp]
+      processors: [batch]
+      exporters: [otlp/data-prepper]
